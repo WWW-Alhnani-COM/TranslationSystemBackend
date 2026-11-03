@@ -96,7 +96,7 @@ namespace TranslationDB.Controllers
                 if (!result.Success)
                     return HandleError(result.Message);
 
-                return HandleResult(null, "Project deleted successfully");
+                return HandleResult<object?>(null, "Project deleted successfully");
             }
             catch (Exception ex)
             {

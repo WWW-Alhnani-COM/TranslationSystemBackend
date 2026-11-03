@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TranslationDB.Models;
 
 namespace TranslationDB.Data
@@ -72,7 +73,7 @@ namespace TranslationDB.Data
             modelBuilder.Entity<Project>(entity =>
             {
                 entity.HasKey(p => p.Id);
-                entity.HasIndex(p => p.CreatedBy);
+                entity.HasIndex(p => p.CreatedById);
 
                 entity.Property(p => p.Name).HasMaxLength(255).IsRequired();
                 entity.Property(p => p.SourceLanguage).HasMaxLength(10).IsRequired();

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TranslationDB.Data;
 using TranslationDB.Models;
+using TranslationDB.Enums;
 using TranslationDB.Models.DTOs;
 using TranslationDB.Services.Interfaces;
 using TranslationManagementSystem.API.Models.DTOs;
@@ -69,8 +70,8 @@ namespace TranslationDB.Services
                     Description = projectCreateDto.Description,
                     SourceLanguage = projectCreateDto.SourceLanguage,
                     TargetLanguages = projectCreateDto.TargetLanguages,
-                    Status = Enums.ProjectStatus.Created,
-                    CreatedBy = "system", // This should be replaced with actual user ID from authentication
+                    Status = ProjectStatus.Created,
+                    CreatedById = "system", // Replaced with the authenticated user ID when project creation is secured.
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     Deadline = projectCreateDto.Deadline,
@@ -224,7 +225,7 @@ namespace TranslationDB.Services
                     return Error<Project>("Project not found");
                 }
 
-                if (Enum.TryParse<Enums.ProjectStatus>(status, out var projectStatus))
+                if (Enum.TryParse<ProjectStatus>(status, true, out var projectStatus))
                 {
                     project.Status = projectStatus;
                     project.UpdatedAt = DateTime.UtcNow;

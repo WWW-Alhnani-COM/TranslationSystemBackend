@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using TranslationDB.Models;
 using TranslationDB.Models.DTOs;
@@ -54,7 +55,11 @@ namespace TranslationDB.Controllers
         {
             try
             {
-                var result = await _projectService.CreateProject(projectCreateDto);
+                var createdById = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(createdById))
+                    return Unauthorized();
+
+                var result = await _projectService.CreateProject(projectCreateDto, createdById);
                 if (!result.Success)
                     return HandleError(result.Message);
 

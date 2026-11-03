@@ -70,7 +70,7 @@ namespace TranslationDB.Controllers
                 if (!result.Success)
                     return HandleError(result.Message);
 
-                return HandleResult(null, "User deleted successfully");
+                return HandleResult<object?>(null, "User deleted successfully");
             }
             catch (Exception ex)
             {

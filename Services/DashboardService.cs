@@ -1,3 +1,4 @@
+using Enums = TranslationDB.Enums;
 using Microsoft.EntityFrameworkCore;
 using TranslationDB.Data;
 using TranslationDB.Models.DTOs;
@@ -93,11 +94,11 @@ namespace TranslationDB.Services
                         break;
 
                     default: // DataEntry, Supervisor, etc.
-                        stats.TotalProjects = await _context.Projects.CountAsync(p => p.CreatedBy == userId);
-                        stats.CompletedProjects = await _context.Projects.CountAsync(p => p.CreatedBy == userId && p.Status == Enums.ProjectStatus.Completed);
-                        stats.InTranslation = await _context.Projects.CountAsync(p => p.CreatedBy == userId && p.Status == Enums.ProjectStatus.InTranslation);
-                        stats.InReview = await _context.Projects.CountAsync(p => p.CreatedBy == userId && p.Status == Enums.ProjectStatus.InReview);
-                        stats.PendingApproval = await _context.Projects.CountAsync(p => p.CreatedBy == userId && p.Status == Enums.ProjectStatus.PendingApproval);
+                        stats.TotalProjects = await _context.Projects.CountAsync(p => p.CreatedById == userId);
+                        stats.CompletedProjects = await _context.Projects.CountAsync(p => p.CreatedById == userId && p.Status == Enums.ProjectStatus.Completed);
+                        stats.InTranslation = await _context.Projects.CountAsync(p => p.CreatedById == userId && p.Status == Enums.ProjectStatus.InTranslation);
+                        stats.InReview = await _context.Projects.CountAsync(p => p.CreatedById == userId && p.Status == Enums.ProjectStatus.InReview);
+                        stats.PendingApproval = await _context.Projects.CountAsync(p => p.CreatedById == userId && p.Status == Enums.ProjectStatus.PendingApproval);
                         break;
                 }
 
@@ -222,7 +223,7 @@ namespace TranslationDB.Services
         {
             var ratings = await _context.Reviews
                 .Where(r => r.Rating.HasValue)
-                .Select(r => r.Rating.Value)
+                .Select(r => (int)r.Rating!.Value)
                 .ToListAsync();
 
             return ratings.Any() ? ratings.Average() : 0;
@@ -232,7 +233,7 @@ namespace TranslationDB.Services
         {
             var ratings = await _context.Reviews
                 .Where(r => r.Rating.HasValue && r.Translation.TranslatorId == userId)
-                .Select(r => r.Rating.Value)
+                .Select(r => (int)r.Rating!.Value)
                 .ToListAsync();
 
             return ratings.Any() ? ratings.Average() : 0;
@@ -242,7 +243,7 @@ namespace TranslationDB.Services
         {
             var ratings = await _context.Reviews
                 .Where(r => r.Rating.HasValue && r.ReviewerId == userId)
-                .Select(r => r.Rating.Value)
+                .Select(r => (int)r.Rating!.Value)
                 .ToListAsync();
 
             return ratings.Any() ? ratings.Average() : 0;

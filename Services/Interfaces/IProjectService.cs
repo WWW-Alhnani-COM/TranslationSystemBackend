@@ -8,7 +8,7 @@ namespace TranslationDB.Services.Interfaces
     {
         Task<ServiceResult<List<Project>>> GetAllProjects();
         Task<ServiceResult<Project>> GetProjectById(int id);
-        Task<ServiceResult<Project>> CreateProject(ProjectCreateDto projectCreateDto);
+        Task<ServiceResult<Project>> CreateProject(ProjectCreateDto projectCreateDto, string createdById);
         Task<ServiceResult<Project>> UpdateProject(Project project);
         Task<ServiceResult<bool>> DeleteProject(int id);
         Task<ServiceResult<List<Paragraph>>> GetProjectParagraphs(int projectId);

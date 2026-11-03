@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using TranslationDB.Enums;
-using TranslationDB.Models;
-
 
 namespace TranslationDB.Models
 {
@@ -13,7 +12,7 @@ namespace TranslationDB.Models
 
         [Required]
         [StringLength(255)]
-        [RegularExpression(@"^[a-zA-Z0-9_\.]+$", ErrorMessage = "Invalid username format")]
+        [RegularExpression(@"^[a-zA-Z0-9_.]+$", ErrorMessage = "Invalid username format")]
         public string UserName { get; set; } = string.Empty;
 
         [Required]
@@ -28,11 +27,16 @@ namespace TranslationDB.Models
         [StringLength(255)]
         public string FullName { get; set; } = string.Empty;
 
+        [StringLength(30)]
+        public string? PhoneNumber { get; set; }
+
+        [JsonIgnore]
         public byte[]? PasswordHash { get; set; }
+
+        [JsonIgnore]
         public byte[]? PasswordSalt { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
         public bool IsActive { get; set; } = true;
 
         [StringLength(500)]
@@ -40,7 +44,6 @@ namespace TranslationDB.Models
 
         public DateTime? LastLoginAt { get; set; }
 
-        // Navigation properties
         public virtual ICollection<Project> CreatedProjects { get; set; } = new List<Project>();
         public virtual ICollection<Translation> Translations { get; set; } = new List<Translation>();
         public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();

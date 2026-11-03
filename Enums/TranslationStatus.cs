@@ -1,10 +1,10 @@
-namespace TranslationSystemBackend.Models.Enums;
+namespace TranslationDB.Enums;
 
 public enum TranslationStatus
 {
-    Draft,         // 0
-    Submitted,     // 1
-    UnderReview,   // 2
-    Approved,      // 3
-    Rejected       // 4
+    Draft,
+    Submitted,
+    UnderReview,
+    Approved,
+    Rejected
 }

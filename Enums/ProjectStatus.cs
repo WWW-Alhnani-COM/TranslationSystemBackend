@@ -1,12 +1,12 @@
-namespace TranslationSystemBackend.Models.Enums;
+namespace TranslationDB.Enums;
 
 public enum ProjectStatus
 {
-    Created,        // 0
-    FileUploaded,   // 1
-    ParagraphsSplit,// 2
-    InTranslation,  // 3
-    InReview,       // 4
-    PendingApproval,// 5
-    Completed       // 6
+    Created,
+    FileUploaded,
+    ParagraphsSplit,
+    InTranslation,
+    InReview,
+    PendingApproval,
+    Completed
 }

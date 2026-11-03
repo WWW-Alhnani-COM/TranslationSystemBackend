@@ -1,3 +1,4 @@
+using Enums = TranslationDB.Enums;
 using Microsoft.EntityFrameworkCore;
 using TranslationDB.Data;
 using TranslationDB.Models;

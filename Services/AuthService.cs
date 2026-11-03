@@ -1,166 +1,176 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using TranslationDB.Data;
+using TranslationDB.Enums;
 using TranslationDB.Models;
 using TranslationDB.Models.DTOs;
 using TranslationDB.Services.Interfaces;
 using TranslationManagementSystem.API.Models.DTOs;
 
-namespace TranslationDB.Services
+namespace TranslationDB.Services;
+
+public class AuthService : BaseService, IAuthService
 {
-    public class AuthService : BaseService, IAuthService
+    private static readonly HashSet<UserType> SelfRegistrationRoles =
+    [
+        UserType.DataEntry,
+        UserType.Translator,
+        UserType.Reviewer
+    ];
+
+    private readonly AppDbContext _context;
+    private readonly IConfiguration _configuration;
+
+    public AuthService(AppDbContext context, IConfiguration configuration)
     {
-        private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
+        _context = context;
+        _configuration = configuration;
+    }
 
-        public AuthService(AppDbContext context, IConfiguration configuration)
+    public async Task<ServiceResult<User>> Register(RegisterDto registerDto)
+    {
+        var email = registerDto.Email.Trim().ToLowerInvariant();
+        var username = registerDto.Username.Trim();
+
+        if (await _context.Users.AnyAsync(u => u.Email.ToLower() == email))
+            return Error<User>("An account with this email already exists.");
+
+        if (await _context.Users.AnyAsync(u => u.UserName.ToLower() == username.ToLower()))
+            return Error<User>("This username is already in use.");
+
+        if (!Enum.TryParse<UserType>(registerDto.UserType, true, out var role) ||
+            !SelfRegistrationRoles.Contains(role))
         {
-            _context = context;
-            _configuration = configuration;
+            return Error<User>("Invalid user type. Self-registration is limited to DataEntry, Translator, and Reviewer.");
         }
 
-        public async Task<ServiceResult<User>> Register(RegisterDto registerDto)
+        CreatePasswordHash(registerDto.Password, out var passwordHash, out var passwordSalt);
+
+        var user = new User
         {
-            try
-            {
-                // Check if user already exists
-                if (await UserExists(registerDto.Email))
-                {
-                    return Error<User>("User with this email already exists");
-                }
+            Id = Guid.NewGuid().ToString(),
+            UserName = username,
+            Email = email,
+            Role = role,
+            FullName = $"{registerDto.FirstName.Trim()} {registerDto.LastName.Trim()}".Trim(),
+            PhoneNumber = string.IsNullOrWhiteSpace(registerDto.PhoneNumber)
+                ? null
+                : registerDto.PhoneNumber.Trim(),
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        };
 
-                // Create password hash
-                CreatePasswordHash(registerDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
 
-                var user = new User
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    UserName = registerDto.UserName,
-                    Email = registerDto.Email,
-                    Role = registerDto.Role,
-                    FullName = registerDto.FullName,
-                    PasswordHash = passwordHash,
-                    PasswordSalt = passwordSalt,
-                    CreatedAt = DateTime.UtcNow,
-                    IsActive = true
-                };
+        return Success(user, "User registered successfully");
+    }
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+    public async Task<ServiceResult<object>> Login(LoginDto loginDto)
+    {
+        var email = loginDto.Email.Trim().ToLowerInvariant();
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == email && u.IsActive);
 
-                return Success(user, "User registered successfully");
-            }
-            catch (Exception ex)
-            {
-                return Error<User>($"Registration failed: {ex.Message}");
-            }
+        if (user?.PasswordHash is not { Length: > 0 } ||
+            user.PasswordSalt is not { Length: > 0 } ||
+            !VerifyPasswordHash(loginDto.Password, user.PasswordHash, user.PasswordSalt))
+        {
+            return Error<object>("Invalid email or password");
         }
 
-        public async Task<ServiceResult<object>> Login(LoginDto loginDto)
+        user.LastLoginAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        var result = new
         {
-            try
+            Token = GenerateJwtToken(user),
+            User = new
             {
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.IsActive);
-
-                if (user == null)
-                {
-                    return Error<object>("Invalid email or password");
-                }
-
-                if (!VerifyPasswordHash(loginDto.Password, user.PasswordHash, user.PasswordSalt))
-                {
-                    return Error<object>("Invalid email or password");
-                }
-
-                // Update last login
-                user.LastLoginAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-
-                var token = GenerateJwtToken(user);
-
-                var result = new
-                {
-                    Token = token,
-                    User = new
-                    {
-                        user.Id,
-                        user.UserName,
-                        user.Email,
-                        user.Role,
-                        user.FullName,
-                        user.ProfileImageUrl
-                    }
-                };
-
-                return Success<object>(result, "Login successful");
+                user.Id,
+                user.UserName,
+                user.Email,
+                Role = user.Role.ToString(),
+                user.FullName,
+                user.ProfileImageUrl
             }
-            catch (Exception ex)
-            {
-                return Error<object>($"Login failed: {ex.Message}");
-            }
-        }
+        };
 
-        public async Task<bool> UserExists(string email)
+        return Success<object>(result, "Login successful");
+    }
+
+    public Task<bool> UserExists(string email)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        return _context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail);
+    }
+
+    public string GenerateJwtToken(User user)
+    {
+        var jwtKey = _configuration["Jwt:Key"]
+            ?? throw new InvalidOperationException("JWT signing key is not configured.");
+        var issuer = _configuration["Jwt:Issuer"]
+            ?? throw new InvalidOperationException("JWT issuer is not configured.");
+        var audience = _configuration["Jwt:Audience"]
+            ?? throw new InvalidOperationException("JWT audience is not configured.");
+
+        var claims = new[]
         {
-            return await _context.Users.AnyAsync(u => u.Email == email);
-        }
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Name, user.UserName),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim("FullName", user.FullName)
+        };
 
-        public string GenerateJwtToken(User user)
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var descriptor = new SecurityTokenDescriptor
         {
-            var jwtKey = _configuration.GetSection("Jwt:Key").Value;
-            if (string.IsNullOrEmpty(jwtKey))
-            {
-                throw new ArgumentNullException("JWT Key is not configured");
-            }
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddHours(12),
+            SigningCredentials = credentials,
+            Issuer = issuer,
+            Audience = audience
+        };
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.ToString()),
-                new Claim("FullName", user.FullName)
-            };
+        var handler = new JwtSecurityTokenHandler();
+        return handler.WriteToken(handler.CreateToken(descriptor));
+    }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+    private static void CreatePasswordHash(
+        string password,
+        out byte[] passwordHash,
+        out byte[] passwordSalt)
+    {
+        passwordSalt = RandomNumberGenerator.GetBytes(16);
+        passwordHash = Rfc2898DeriveBytes.Pbkdf2(
+            password,
+            passwordSalt,
+            iterations: 210_000,
+            hashAlgorithm: HashAlgorithmName.SHA256,
+            outputLength: 32);
+    }
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = creds,
-                Issuer = _configuration.GetSection("Jwt:Issuer").Value,
-                Audience = _configuration.GetSection("Jwt:Audience").Value
-            };
+    private static bool VerifyPasswordHash(
+        string password,
+        byte[] passwordHash,
+        byte[] passwordSalt)
+    {
+        var computedHash = Rfc2898DeriveBytes.Pbkdf2(
+            password,
+            passwordSalt,
+            iterations: 210_000,
+            hashAlgorithm: HashAlgorithmName.SHA256,
+            outputLength: 32);
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-
-            return tokenHandler.WriteToken(token);
-        }
-
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-            }
-        }
-
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512(passwordSalt))
-            {
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(passwordHash);
-            }
-        }
+        return CryptographicOperations.FixedTimeEquals(computedHash, passwordHash);
     }
 }

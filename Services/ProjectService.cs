@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TranslationDB.Data;
 using TranslationDB.Models;
+using TranslationDB.Enums;
 using TranslationDB.Models.DTOs;
 using TranslationDB.Services.Interfaces;
 using TranslationManagementSystem.API.Models.DTOs;
@@ -59,7 +60,7 @@ namespace TranslationDB.Services
             }
         }
 
-        public async Task<ServiceResult<Project>> CreateProject(ProjectCreateDto projectCreateDto)
+        public async Task<ServiceResult<Project>> CreateProject(ProjectCreateDto projectCreateDto, string createdById)
         {
             try
             {
@@ -69,8 +70,8 @@ namespace TranslationDB.Services
                     Description = projectCreateDto.Description,
                     SourceLanguage = projectCreateDto.SourceLanguage,
                     TargetLanguages = projectCreateDto.TargetLanguages,
-                    Status = Enums.ProjectStatus.Created,
-                    CreatedBy = "system", // This should be replaced with actual user ID from authentication
+                    Status = ProjectStatus.Created,
+                    CreatedById = createdById,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     Deadline = projectCreateDto.Deadline,
@@ -224,7 +225,7 @@ namespace TranslationDB.Services
                     return Error<Project>("Project not found");
                 }
 
-                if (Enum.TryParse<Enums.ProjectStatus>(status, out var projectStatus))
+                if (Enum.TryParse<ProjectStatus>(status, true, out var projectStatus))
                 {
                     project.Status = projectStatus;
                     project.UpdatedAt = DateTime.UtcNow;
@@ -243,11 +244,6 @@ namespace TranslationDB.Services
             {
                 return Error<Project>($"Error updating project status: {ex.Message}");
             }
-        }
-
-        public Task<ServiceResult<Project>> CreateProject(ProjectCreateDto projectCreateDto)
-        {
-            throw new NotImplementedException();
         }
     }
 }

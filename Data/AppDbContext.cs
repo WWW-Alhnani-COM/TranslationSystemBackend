@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TranslationDB.Models;
 
 namespace TranslationDB.Data
@@ -72,11 +73,11 @@ namespace TranslationDB.Data
             modelBuilder.Entity<Project>(entity =>
             {
                 entity.HasKey(p => p.Id);
-                entity.HasIndex(p => p.CreatedBy);
+                entity.HasIndex(p => p.CreatedById);
 
                 entity.Property(p => p.Name).HasMaxLength(255).IsRequired();
                 entity.Property(p => p.SourceLanguage).HasMaxLength(10).IsRequired();
-                entity.Property(p => p.CreatedBy).HasMaxLength(450).IsRequired();
+                entity.Property(p => p.CreatedById).HasMaxLength(450).IsRequired();
                 entity.Property(p => p.CreatedAt).HasColumnType("datetime(6)");
                 entity.Property(p => p.UpdatedAt).HasColumnType("datetime(6)");
                 entity.Property(p => p.Deadline).HasColumnType("datetime(6)");
@@ -84,7 +85,7 @@ namespace TranslationDB.Data
                 // Relationships
                 entity.HasOne(p => p.Creator)
                       .WithMany(u => u.CreatedProjects)
-                      .HasForeignKey(p => p.CreatedBy)
+                      .HasForeignKey(p => p.CreatedById)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 

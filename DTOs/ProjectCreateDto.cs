@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace TranslationManagementSystem.API.Models.DTOs
 {
@@ -17,7 +16,6 @@ namespace TranslationManagementSystem.API.Models.DTOs
         public string SourceLanguage { get; set; } = "en";
 
         [Required]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public string TargetLanguages { get; set; } = "[]";
 
         public DateTime? Deadline { get; set; }

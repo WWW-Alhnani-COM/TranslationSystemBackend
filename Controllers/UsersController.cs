@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TranslationDB.Models;
-using TranslationDB.Services;
+using TranslationDB.Services.Interfaces;
 
 namespace TranslationDB.Controllers
 {
@@ -41,6 +44,7 @@ namespace TranslationDB.Controllers
             }
         }
 
+        [Authorize(Roles = "SystemAdmin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(string id, User user)
         {
@@ -61,6 +65,7 @@ namespace TranslationDB.Controllers
             }
         }
 
+        [Authorize(Roles = "SystemAdmin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
@@ -70,7 +75,7 @@ namespace TranslationDB.Controllers
                 if (!result.Success)
                     return HandleError(result.Message);
 
-                return HandleResult(null, "User deleted successfully");
+                return HandleResult<object?>(null, "User deleted successfully");
             }
             catch (Exception ex)
             {
@@ -78,6 +83,7 @@ namespace TranslationDB.Controllers
             }
         }
 
+        [Authorize(Roles = "SystemAdmin")]
         [HttpPost("{id}/deactivate")]
         public async Task<IActionResult> DeactivateUser(string id)
         {
@@ -95,6 +101,7 @@ namespace TranslationDB.Controllers
             }
         }
 
+        [Authorize(Roles = "SystemAdmin")]
         [HttpPost("{id}/activate")]
         public async Task<IActionResult> ActivateUser(string id)
         {

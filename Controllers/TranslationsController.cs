@@ -89,7 +89,7 @@ namespace TranslationDB.Controllers
                 if (!result.Success)
                     return HandleError(result.Message);
 
-                return HandleResult(null, "Translation deleted successfully");
+                return HandleResult<object?>(null, "Translation deleted successfully");
             }
             catch (Exception ex)
             {

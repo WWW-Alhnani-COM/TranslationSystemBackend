@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using TranslationDB.Models;
 using TranslationDB.Models.DTOs;
 using TranslationDB.Services.Interfaces;
+using TranslationManagementSystem.API.Models.DTOs;
 
 namespace TranslationDB.Controllers
 {
@@ -53,7 +55,11 @@ namespace TranslationDB.Controllers
         {
             try
             {
-                var result = await _projectService.CreateProject(projectCreateDto);
+                var createdById = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(createdById))
+                    return Unauthorized();
+
+                var result = await _projectService.CreateProject(projectCreateDto, createdById);
                 if (!result.Success)
                     return HandleError(result.Message);
 
@@ -95,7 +101,7 @@ namespace TranslationDB.Controllers
                 if (!result.Success)
                     return HandleError(result.Message);
 
-                return HandleResult(null, "Project deleted successfully");
+                return HandleResult<object?>(null, "Project deleted successfully");
             }
             catch (Exception ex)
             {

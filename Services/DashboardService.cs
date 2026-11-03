@@ -1,3 +1,4 @@
+using Enums = TranslationDB.Enums;
 using Microsoft.EntityFrameworkCore;
 using TranslationDB.Data;
 using TranslationDB.Models.DTOs;
@@ -93,11 +94,11 @@ namespace TranslationDB.Services
                         break;
 
                     default: // DataEntry, Supervisor, etc.
-                        stats.TotalProjects = await _context.Projects.CountAsync(p => p.CreatedBy == userId);
-                        stats.CompletedProjects = await _context.Projects.CountAsync(p => p.CreatedBy == userId && p.Status == Enums.ProjectStatus.Completed);
-                        stats.InTranslation = await _context.Projects.CountAsync(p => p.CreatedBy == userId && p.Status == Enums.ProjectStatus.InTranslation);
-                        stats.InReview = await _context.Projects.CountAsync(p => p.CreatedBy == userId && p.Status == Enums.ProjectStatus.InReview);
-                        stats.PendingApproval = await _context.Projects.CountAsync(p => p.CreatedBy == userId && p.Status == Enums.ProjectStatus.PendingApproval);
+                        stats.TotalProjects = await _context.Projects.CountAsync(p => p.CreatedById == userId);
+                        stats.CompletedProjects = await _context.Projects.CountAsync(p => p.CreatedById == userId && p.Status == Enums.ProjectStatus.Completed);
+                        stats.InTranslation = await _context.Projects.CountAsync(p => p.CreatedById == userId && p.Status == Enums.ProjectStatus.InTranslation);
+                        stats.InReview = await _context.Projects.CountAsync(p => p.CreatedById == userId && p.Status == Enums.ProjectStatus.InReview);
+                        stats.PendingApproval = await _context.Projects.CountAsync(p => p.CreatedById == userId && p.Status == Enums.ProjectStatus.PendingApproval);
                         break;
                 }
 

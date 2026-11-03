@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using TranslationDB.Enums;
 
 namespace TranslationDB.Models
@@ -29,7 +30,10 @@ namespace TranslationDB.Models
         [StringLength(30)]
         public string? PhoneNumber { get; set; }
 
+        [JsonIgnore]
         public byte[]? PasswordHash { get; set; }
+
+        [JsonIgnore]
         public byte[]? PasswordSalt { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

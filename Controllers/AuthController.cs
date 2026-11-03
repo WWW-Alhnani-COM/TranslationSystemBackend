@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TranslationDB.Models.DTOs;
 using TranslationDB.Services.Interfaces;
@@ -5,6 +6,7 @@ using TranslationManagementSystem.API.Models.DTOs;
 
 namespace TranslationDB.Controllers;
 
+[AllowAnonymous]
 public class AuthController : BaseController
 {
     private readonly IAuthService _authService;

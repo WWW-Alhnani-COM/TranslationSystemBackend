@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TranslationDB.Models;
-using TranslationDB.Services;
+using TranslationDB.Services.Interfaces;
 
 namespace TranslationDB.Controllers
 {

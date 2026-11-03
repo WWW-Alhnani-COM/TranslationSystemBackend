@@ -21,7 +21,17 @@ public class AuthController : BaseController
         if (!result.Success)
             return HandleError(result.Message);
 
-        return HandleResult(result.Data, "User registered successfully");
+        var user = result.Data;
+        return HandleResult(new
+        {
+            user.Id,
+            user.UserName,
+            user.Email,
+            FullName = user.FullName,
+            Role = user.Role.ToString(),
+            user.PhoneNumber,
+            user.CreatedAt
+        }, "User registered successfully");
     }
 
     [HttpPost("login")]

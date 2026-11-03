@@ -95,7 +95,7 @@ namespace TranslationDB.Controllers
                 if (!result.Success)
                     return HandleError(result.Message);
 
-                return HandleResult(null, "Review deleted successfully");
+                return HandleResult<object?>(null, "Review deleted successfully");
             }
             catch (Exception ex)
             {

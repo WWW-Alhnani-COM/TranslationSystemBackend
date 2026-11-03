@@ -60,7 +60,7 @@ namespace TranslationDB.Services
             }
         }
 
-        public async Task<ServiceResult<Project>> CreateProject(ProjectCreateDto projectCreateDto)
+        public async Task<ServiceResult<Project>> CreateProject(ProjectCreateDto projectCreateDto, string createdById)
         {
             try
             {
@@ -71,7 +71,7 @@ namespace TranslationDB.Services
                     SourceLanguage = projectCreateDto.SourceLanguage,
                     TargetLanguages = projectCreateDto.TargetLanguages,
                     Status = ProjectStatus.Created,
-                    CreatedById = "system", // Replaced with the authenticated user ID when project creation is secured.
+                    CreatedById = createdById,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     Deadline = projectCreateDto.Deadline,

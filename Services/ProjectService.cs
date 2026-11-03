@@ -245,10 +245,5 @@ namespace TranslationDB.Services
                 return Error<Project>($"Error updating project status: {ex.Message}");
             }
         }
-
-        public Task<ServiceResult<Project>> CreateProject(ProjectCreateDto projectCreateDto)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

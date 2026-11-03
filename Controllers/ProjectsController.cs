@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using TranslationDB.Models;
 using TranslationDB.Models.DTOs;
 using TranslationDB.Services.Interfaces;
+using TranslationManagementSystem.API.Models.DTOs;
 
 namespace TranslationDB.Controllers
 {

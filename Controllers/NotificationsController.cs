@@ -89,7 +89,7 @@ namespace TranslationDB.Controllers
                 if (!result.Success)
                     return HandleError(result.Message);
 
-                return HandleResult(null, "Notification deleted successfully");
+                return HandleResult<object?>(null, "Notification deleted successfully");
             }
             catch (Exception ex)
             {
@@ -123,7 +123,7 @@ namespace TranslationDB.Controllers
                 if (!result.Success)
                     return HandleError(result.Message);
 
-                return HandleResult(null, "All notifications marked as read");
+                return HandleResult<object?>(null, "All notifications marked as read");
             }
             catch (Exception ex)
             {

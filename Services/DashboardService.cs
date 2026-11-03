@@ -223,7 +223,7 @@ namespace TranslationDB.Services
         {
             var ratings = await _context.Reviews
                 .Where(r => r.Rating.HasValue)
-                .Select(r => r.Rating.Value)
+                .Select(r => (int)r.Rating!.Value)
                 .ToListAsync();
 
             return ratings.Any() ? ratings.Average() : 0;
@@ -233,7 +233,7 @@ namespace TranslationDB.Services
         {
             var ratings = await _context.Reviews
                 .Where(r => r.Rating.HasValue && r.Translation.TranslatorId == userId)
-                .Select(r => r.Rating.Value)
+                .Select(r => (int)r.Rating!.Value)
                 .ToListAsync();
 
             return ratings.Any() ? ratings.Average() : 0;
@@ -243,7 +243,7 @@ namespace TranslationDB.Services
         {
             var ratings = await _context.Reviews
                 .Where(r => r.Rating.HasValue && r.ReviewerId == userId)
-                .Select(r => r.Rating.Value)
+                .Select(r => (int)r.Rating!.Value)
                 .ToListAsync();
 
             return ratings.Any() ? ratings.Average() : 0;
